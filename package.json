@@ -1,7 +1,7 @@
 {
   "name": "grunt-auto-release",
   "description": "Grunt plugin for automatic releasing.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "https://github.com/vojtajina/grunt-auto-release",
   "author": {
     "name": "Vojta Jína",
