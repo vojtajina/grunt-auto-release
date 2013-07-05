@@ -8,6 +8,7 @@ var parseRepoInfoFromPackage = function(content) {
   };
 };
 
+
 module.exports = function(grunt) {
 
   var exec = require('child_process').exec;
@@ -31,32 +32,44 @@ module.exports = function(grunt) {
         return finish();
       }
 
-      queue.shift()(value);
+      queue.shift()(value, next, finish);
+    };
+
+    var execCmd = function(cmd, msg, fn) {
+      if (msg) {
+        grunt.verbose.write(msg + '...');
+      }
+
+      exec(cmd, function(err, output) {
+        if (err) {
+          return grunt.fatal(err.message.replace(/\n$/, '.'));
+        }
+
+        if (msg) {
+          grunt.verbose.ok();
+        }
+
+        fn(output);
+      });
     };
 
     var runCmd = function(cmd, msg, fn) {
-      queue.push(function() {
-        if (msg) {
-          grunt.verbose.write(msg + '...');
-        }
-
-        exec(cmd, function(err, output) {
-          if (err) {
-            return grunt.fatal(err.message.replace(/\n$/, '.'));
-          }
-
-          if (msg) {
-            grunt.verbose.ok();
-          }
-
+      queue.push(function(valueFromPreviousCmd, next, finish) {
+        execCmd(cmd, msg, function(output) {
           if (fn) {
-            output = fn(output);
+            fn(output, next, finish);
+          } else {
+            next(output);
           }
-
-          next(output);
         });
       });
     };
+
+    var runCmdIf = function(condition, cmd, msg, fn) {
+      if (condition) {
+        runCmd(cmd, msg, fn);
+      }
+    }
 
     var run = function(fn) {
       queue.push(fn);
@@ -68,13 +81,36 @@ module.exports = function(grunt) {
       }
     };
 
+    // checkout the branch and pull from remote
     runCmd('git checkout ' + opts.branch, 'Switching to ' + opts.branch);
     runCmd('git pull ' + opts.remote + ' ' + opts.branch, 'Pulling from ' + opts.remote);
-    runCmd('git show -s --format=%H HEAD', null, function(sha) {
-      return sha.replace('\n', '');
+
+
+    // check if there are any new changes
+    runCmd('git describe --tags --abbrev=0', 'Getting the previous tag', function(tag, next, finish) {
+      var latestTag = tag.replace('\n', '');
+
+      execCmd('git log --grep="^feat|^fix" -E --oneline ' + latestTag + '..HEAD | wc -l', 'Checking for new changes since ' + latestTag, function(output) {
+        var newChangesCount = parseInt(output, 10);
+
+        if (!newChangesCount) {
+          grunt.log.ok('Nothing to release since ' + latestTag + '.');
+          return finish();
+        }
+
+        grunt.log.ok('There are ' + newChangesCount + ' new changes since ' + latestTag + '.');
+        return next();
+      });
     });
 
-    runIf(opts.checkTravisBuild, function(latestCommit) {
+
+
+    // check Travis build
+    runCmdIf(opts.checkTravisBuild, 'git show -s --format=%H HEAD', null, function(sha, next) {
+      return next(sha.replace('\n', ''));
+    });
+
+    runIf(opts.checkTravisBuild, function(latestCommit, next, finish) {
       grunt.verbose.write('Fetching status from GitHub/Travis...');
 
       var options = {
@@ -106,25 +142,20 @@ module.exports = function(grunt) {
             return next();
           }
 
-          grunt.fatal('Travis build for ' + opts.githubUser + '/' + opts.githubRepo + '/' + latestCommit + ' failed (' + response[0].state + ').');
+          if (response[0].state === 'pending') {
+            return grunt.fatal('Travis build for ' + opts.githubUser + '/' + opts.githubRepo + '/' + latestCommit + ' is pending.');
+          }
+
+          return grunt.fatal('Travis build for ' + opts.githubUser + '/' + opts.githubRepo + '/' + latestCommit + ' failed (' + response[0].state + ').');
         });
       });
     });
 
-    runCmd('git describe --tags --abbrev=0', 'Getting the previous tag', function(tag) {
-      var latestTag = tag.replace('\n', '');
 
-      runCmd('git log --grep="^feat|^fix" -E --oneline ' + latestTag + '..HEAD | wc -l', 'Checking for new changes since ' + latestTag + '...', function(output) {
-        var newChangesCount = parseInt(output, 10);
-
-        if (!newChangesCount) {
-          grunt.log.ok('Nothing to release since ' + latestTag + '.');
-        } else {
-          grunt.log.ok('There are ' + newChangesCount + ' new changes to release.');
-
-          grunt.task.run([opts.releaseTask]);
-        }
-      });
+    // RELEASE
+    run(function(_, next) {
+      grunt.task.run([opts.releaseTask]);
+      next();
     });
 
 
