@@ -1,5 +1,11 @@
 module.exports = (grunt) ->
 
+  grunt.initConfig
+    'auto-release': options:
+      checkTravisBuild: false
+    'bump': options:
+      pushTo: 'upstream'
+
   grunt.loadTasks 'tasks'
   grunt.loadNpmTasks 'grunt-npm'
   grunt.loadNpmTasks 'grunt-bump'
