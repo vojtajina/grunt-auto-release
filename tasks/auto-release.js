@@ -1,15 +1,23 @@
+var GITHUB_REPO_REGEXP = /github\.com\/([\w-\.]+)\/([\w-\.]+)\.git/;
+var parseRepoInfoFromPackage = function(content) {
+  var match = content.match(GITHUB_REPO_REGEXP);
+
+  return {
+    user: match[1],
+    repo: match[2]
+  };
+};
+
 module.exports = function(grunt) {
 
   var exec = require('child_process').exec;
   var http = require('https');
-  var GITHUB_REPO_REGEXP = /github\.com\/([\w-\.]+)\/([\w-\.]+)/;
 
   grunt.registerTask('auto-release', '', function(type) {
-
-    var match = grunt.file.read('package.json').match(GITHUB_REPO_REGEXP);
+    var repoInfo = parseRepoInfoFromPackage(grunt.file.read('package.json'));
     var opts = this.options({
-      githubUser: match[1],
-      githubRepo: match[2],
+      githubUser: repoInfo.user,
+      githubRepo: repoInfo.repo,
       branch: grunt.option('auto-release-branch') || 'master',
       remote: grunt.option('auto-release-remote') || 'upstream',
       checkTravisBuild: true,
@@ -124,3 +132,7 @@ module.exports = function(grunt) {
     next();
   });
 };
+
+
+// publish for testing
+module.exports.parseRepoInfoFromPackage = parseRepoInfoFromPackage;

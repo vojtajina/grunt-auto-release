@@ -30,7 +30,9 @@
   "devDependencies": {
     "grunt": "~0.4",
     "grunt-npm": "~0.0.1",
-    "grunt-bump": "~0.0.1"
+    "grunt-bump": "~0.0.1",
+    "grunt-simple-mocha": "~0.4.0",
+    "chai": "~1.7.2"
   },
   "keywords": [
     "gruntplugin"
