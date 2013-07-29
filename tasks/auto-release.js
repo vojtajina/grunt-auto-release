@@ -88,7 +88,7 @@ module.exports = function(grunt) {
 
     // check if there are any new changes
     runCmd('git describe --tags --abbrev=0', 'Getting the previous tag', function(tag, next, finish) {
-      var latestTag = tag.replace('\n', '');
+      var latestTag = tag.replace(/\n/g, '');
 
       execCmd('git log --grep="^feat|^fix" -E --oneline ' + latestTag + '..HEAD | wc -l', 'Checking for new changes since ' + latestTag, function(output) {
         var newChangesCount = parseInt(output, 10);
@@ -107,7 +107,7 @@ module.exports = function(grunt) {
 
     // check Travis build
     runCmdIf(opts.checkTravisBuild, 'git show -s --format=%H HEAD', null, function(sha, next) {
-      return next(sha.replace('\n', ''));
+      return next(sha.replace(/\n/g, ''));
     });
 
     runIf(opts.checkTravisBuild, function(latestCommit, next, finish) {
