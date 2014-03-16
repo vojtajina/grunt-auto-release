@@ -81,6 +81,8 @@ module.exports = function(grunt) {
       }
     };
 
+    runCmd('git fetch ' + opts.remote + ' --tags');
+
     // checkout the branch and pull from remote
     runCmd('git checkout ' + opts.branch, 'Switching to ' + opts.branch);
     runCmd('git pull ' + opts.remote + ' ' + opts.branch, 'Pulling from ' + opts.remote);
