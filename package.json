@@ -2,6 +2,7 @@
   "name": "grunt-auto-release",
   "description": "Grunt plugin for automatic releasing.",
   "version": "0.0.6",
+  "license": "MIT",
   "homepage": "https://github.com/vojtajina/grunt-auto-release",
   "author": {
     "name": "Vojta Jína",
