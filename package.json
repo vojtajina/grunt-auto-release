@@ -16,23 +16,23 @@
   "bugs": {
     "url": "https://github.com/vojtajina/grunt-auto-release/issues"
   },
-  "main": "grunt.js",
+  "main": "task/auto-release.js",
   "engines": {
     "node": ">= 0.8.0"
   },
   "scripts": {
     "test": "grunt test"
   },
-  "dependencies": {},
   "peerDependencies": {
-    "grunt": "~1.0"
+    "grunt": ">=0.4.x || ^1.0.0"
   },
+  "dependencies": {},
   "devDependencies": {
-    "grunt": "~1.0",
-    "grunt-npm": "~0.0.2",
+    "chai": "~3.5.0",
+    "grunt": "^1.0.1",
     "grunt-bump": "~0.8.0",
-    "grunt-simple-mocha": "~0.4.1",
-    "chai": "~3.5.0"
+    "grunt-npm": "~0.0.2",
+    "grunt-simple-mocha": "~0.4.1"
   },
   "keywords": [
     "gruntplugin"
